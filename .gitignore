@@ -1,3 +1,10 @@
+*.history
+*.pem
+secrets.yaml
+/*output
+/checkov*
+bandit*
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

@@ -1,0 +1,5 @@
+httpx
+pytest
+bandit
+checkov
+dotenv

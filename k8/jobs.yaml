@@ -1,0 +1,78 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: code-test
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: code-test-pvc
+  namespace: code-test
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: code-test-job
+  namespace: code-test
+spec:
+  template:
+    metadata:
+      labels:
+        app: code-test
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        fsGroup: 1000
+      containers:
+        - name: code-test-container
+          image: kynanwontmiss/code-test:latest
+          imagePullPolicy: IfNotPresent
+
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            - name: output-storage
+              mountPath: /app/output
+          env:
+            - name: BASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: code-test-secret
+                  key: BASE_URL
+
+      restartPolicy: Never
+
+      volumes:
+        - name: output-storage
+          persistentVolumeClaim:
+            claimName: code-test-pvc
+  
+  backoffLimit: 0
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: output-reader
+  namespace: code-test
+spec:
+  containers:
+  - name: output-reader-container
+    image: busybox
+    command: ["sh", "-c", "cat /app/output/* && sleep 3600"]
+    volumeMounts:
+      - name: output-storage
+        mountPath: /app/output
+  restartPolicy: Never
+  volumes:
+    - name: output-storage
+      persistentVolumeClaim:
+        claimName: code-test-pvc
