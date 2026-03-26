@@ -46,7 +46,7 @@ deploy:
 	@kubectl -n code-test delete job --all || true
 	@kubectl -n code-test apply -f k8/jobs.yaml
 	@kubectl -n code-test apply -f k8/secrets.yaml
-
+	
 fetch-output:
 	@echo "Fetching output from Kubernetes..."
 	@kubectl -n code-test delete pod output-reader || true
